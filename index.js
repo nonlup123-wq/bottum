@@ -1,18 +1,39 @@
 const express = require('express');
-const app = express();
+const axios = require('axios');
 
+const app = express();
 app.use(express.json());
 
-app.post('/webhook', (req, res) => {
-  console.log(req.body); // ดู request จาก LINE
-  res.sendStatus(200);   // สำคัญมาก
+app.post('/webhook', async (req, res) => {
+  const events = req.body.events;
+
+  for (let event of events) {
+    if (event.type === 'message') {
+      await axios.post('https://api.line.me/v2/bot/message/reply', {
+        replyToken: event.replyToken,
+        messages: [
+          {
+            type: 'text',
+            text: 'ขณะนี้ตั้มยังไม่ว่างครับ 🙏\nกรุณารอสักครู่นะครับ เดี๋ยวจะรีบมาตอบให้ครับ 😊'
+          }
+        ]
+      }, {
+        headers: {
+          'Authorization': `Bearer ${process.env.CHANNEL_ACCESS_TOKEN}`,
+          'Content-Type': 'application/json'
+        }
+      });
+    }
+  }
+
+  res.sendStatus(200);
 });
 
 app.get('/', (req, res) => {
-  res.send('OK');
+  res.send('Bot is running');
 });
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
-  console.log('Server is running on port ' + port);
+  console.log('Server running on port ' + port);
 });
