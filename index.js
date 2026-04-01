@@ -4,31 +4,38 @@ const line = require("@line/bot-sdk");
 const app = express();
 
 const config = {
-  channelAccessToken: "ใส่ TOKEN ตรงนี้",
-  channelSecret: "ใส่ SECRET ตรงนี้",
+  channelAccessToken: process.env.CHANNEL_ACCESS_TOKEN,
+  channelSecret: process.env.CHANNEL_SECRET,
 };
 
-app.post("/webhook", line.middleware(config), (req, res) => {
-  Promise.all(req.body.events.map(handleEvent)).then((result) =>
-    res.json(result)
-  );
-});
-
 const client = new line.Client(config);
+
+// รับ webhook จาก LINE
+app.post("/webhook", line.middleware(config), (req, res) => {
+  Promise.all(req.body.events.map(handleEvent))
+    .then(() => res.status(200).end())
+    .catch((err) => {
+      console.log(err);
+      res.status(500).end();
+    });
+});
 
 function handleEvent(event) {
   if (event.type !== "message" || event.message.type !== "text") {
     return Promise.resolve(null);
   }
 
+  const replyText = "บอททำงานแล้ว 🔥";
+
   return client.replyMessage(event.replyToken, {
     type: "text",
-    text: "สวัสดี นี่คือบอทของตั้ม 🤖",
+    text: replyText,
   });
 }
 
-app.listen(process.env.PORT || 3000, () => {
-  console.log("Server is running 🔥");
+// เปิด server
+const port = process.env.PORT || 3000;
+app.listen(port, () => {
+  console.log("Server is running");
 });
 
- 
