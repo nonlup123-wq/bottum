@@ -3,16 +3,14 @@ const line = require("@line/bot-sdk");
 
 const app = express();
 
-// สำคัญมาก
+// สำคัญ
 app.use(express.json());
 
-// config จาก ENV
 const config = {
   channelAccessToken: process.env.CHANNEL_ACCESS_TOKEN,
   channelSecret: process.env.CHANNEL_SECRET,
 };
 
-// สร้าง client
 const client = new line.Client(config);
 
 // webhook
@@ -25,9 +23,13 @@ app.post("/webhook", line.middleware(config), (req, res) => {
     });
 });
 
-// ฟังก์ชันตอบข้อความ
+// ฟังก์ชันแปลงคำให้เป็นโบราณ
+function oldThaiStyle(text) {
+  return `คุณท่านกล่าวว่า: "${text}" ข้าน้อยรับทราบแล้วขอรับ 🙇‍♂️`;
+}
+
+// handle event
 function handleEvent(event) {
-  // ถ้าไม่ใช่ข้อความ → ไม่ต้องทำอะไร
   if (event.type !== "message" || event.message.type !== "text") {
     return Promise.resolve(null);
   }
@@ -36,13 +38,17 @@ function handleEvent(event) {
 
   let replyText = "";
 
-  // ตั้งนิสัยบอทได้ตรงนี้
   if (userText === "สวัสดี") {
-    replyText = "สวัสดีครับบบ 😎";
-  } else if (userText === "ทำไรอยู่") {
-    replyText = "รอคุยกับคุณอยู่นี่แหละ 🔥";
-  } else {
-    replyText = "มึงพิมพ์ว่า: " + userText;
+    replyText = "สวัสดีคุณท่าน ข้าน้อยยินดีรับใช้เพลานี้ 🙇‍♂️";
+  } 
+  else if (userText === "ทำไรอยู่") {
+    replyText = "ข้าน้อยกำลังรอรับบัญชาจากคุณท่านอยู่เพลานี้";
+  } 
+  else if (userText === "ไปไหน") {
+    replyText = "ข้าน้อยจักไปยังที่ซึ่งคุณท่านประสงค์ขอรับ";
+  } 
+  else {
+    replyText = oldThaiStyle(userText);
   }
 
   return client.replyMessage(event.replyToken, {
@@ -51,7 +57,7 @@ function handleEvent(event) {
   });
 }
 
-// เปิด server
+// start server
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
   console.log("Server is running 🔥");
